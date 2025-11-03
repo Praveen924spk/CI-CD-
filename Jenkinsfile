@@ -25,13 +25,20 @@ pipeline {
         }
 
         stage('Login to ECR') {
-            steps {
-                sh """
-                aws ecr get-login-password --region ${AWS_REGION} \
-                | docker login --username AWS --password-stdin ${ECR_REPO}
-                """
-            }
+    steps {
+        withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+            sh '''
+                export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+                export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+                export AWS_DEFAULT_REGION=us-east-1
+
+                PASSWORD=$(aws ecr get-login-password --region us-east-1)
+                docker login --username AWS --password $PASSWORD 906634422086.dkr.ecr.us-east-1.amazonaws.com
+            '''
         }
+    }
+}
+
 
         stage('Tag Image') {
             steps {
